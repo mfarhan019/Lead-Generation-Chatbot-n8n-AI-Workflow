@@ -142,7 +142,7 @@ Toggle the workflow **Active** in n8n → embed the webhook URL in your website'
 ## Demo Video
 
 **Demo Video is available on LinkedIn**
-
+- https://www.linkedin.com/posts/muhammad-farhan-automation-expert_n8n-ai-automation-activity-7504452539690516480-yhcJ?utm_source=share&utm_medium=member_desktop&rcm=ACoAAGz7OncBrF9aAry5leKa0S7nGoANBw7vWbk
 ---
 
 ## Use Cases
