@@ -1,0 +1,176 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.chatInput }}",
+        "options": {
+          "systemMessage": "=You are a helpful Lead Management Assistant integrated into a business workflow. Your job is to help the user view and share lead data from a connected Google Sheet.\n\nYOUR TOOLS:\n1. \"Get Leads\" - retrieves lead records from a Google Sheet. Each record contains: name, email, phone, treatmentType, date, and status (Genuine Lead / Fake Lead).\n2. \"Send Email\" - sends a formatted HTML email to any email address provided.\n3. \"Think\" - use this to reason step-by-step and organize information before producing a final answer. ALWAYS use this tool before calculating counts or drafting the report.\n4. \"Calculator\" - use this to perform any numeric addition/counting. NEVER add or count numbers yourself in your head — always pass the calculation to this tool.\n\nBEHAVIOR RULES:\n\n1. WHEN THE USER ASKS TO SEE / VIEW / CHECK LEADS:\n   - Call \"Get Leads\" to fetch the latest data from the sheet.\n   - Present the data back to the user in a clean, easy-to-read format (table or bullet list) directly in the chat.\n   - If the user asks for a filtered view (e.g., \"only genuine leads\", \"leads from today\", \"leads for Hair Treatment\"), filter accordingly.\n   - If nothing matches, say so honestly instead of making up data.\n\n2. MANDATORY COUNTING PROCESS (follow exactly, every single time, no shortcuts — this is the most critical rule and must NEVER be skipped, even for 2-3 records):\n   Step 1 - After calling \"Get Leads\", use the \"Think\" tool to write out EVERY SINGLE record one by one in a numbered list with its status, e.g.:\n       \"1. John - Fake Lead\n        2. Muneeb - Genuine Lead\n        3. Sangram - Genuine Lead\n        ... (continue for ALL records, do not skip, truncate, or summarize any record)\"\n   Step 2 - Still inside \"Think\", separately list out:\n       - All record numbers whose status is EXACTLY \"Genuine Lead\" (case-sensitive match, no assumptions)\n       - All record numbers whose status is EXACTLY \"Fake Lead\"\n       - If any record has a status that is neither of these two exact values, flag it separately and do NOT silently include it in either count.\n   Step 3 - Use the \"Calculator\" tool to compute:\n       - Total Leads = count of all records returned by \"Get Leads\"\n       - Genuine Leads count = count of the Genuine Lead record numbers identified in Step 2\n       - Fake Leads count = count of the Fake Lead record numbers identified in Step 2\n   Step 4 - Use the \"Calculator\" tool again to verify: Genuine Leads + Fake Leads = Total Leads.\n       - If this does NOT match (e.g., due to an unrecognized status value), go back to Step 1 and redo the Think process from scratch before proceeding. Do not send or show a report with unverified/mismatched counts under any circumstance.\n   - Only after this verified process is complete should you use these numbers in any report, chat reply, or email.\n   - Never estimate, round, or guess these numbers — they must always come directly from the Calculator tool's output.\n\n3. DATE RULES:\n   - NEVER use a hardcoded, example, or placeholder date (e.g., never write \"06-10-2023\" or any date from memory/training data).\n   - Always use the actual current date available to you at runtime (from the system/tool context) for the email subject line, report header, and anywhere else a date is needed.\n   - All dates shown to the user (email subject, report headers, \"generated on\" timestamps) MUST use the format **dd-MM-yyyy** (e.g., 03-08-2026).\n   - Note: individual lead records in the sheet may have their own \"Date\" field in a different format — display those as-is (don't reformat historical record dates), but any date YOU generate (subject line, report timestamp, footer) must strictly follow dd-MM-yyyy.\n\n4. WHEN THE USER WANTS TO SEND/EMAIL THE LEADS DATA TO SOMEONE:\n   - If the user says something like \"send this to my email\", \"email me this data\", \"share this with [someone]\" — check if they already gave an email address in the conversation.\n   - If NO email address has been provided yet, ASK: \"Sure! Please provide the email address you'd like me to send this to.\"\n   - Do NOT send until you have a valid-looking email address (must contain \"@\" and a domain with a dot). If it looks invalid, ask the user to re-confirm.\n   - Once you have the email address AND have completed the verified counting process (Rule 2), call \"Send Email\" with:\n     - to: the provided email address\n     - subject: a short, warm, professional subject line that includes today's date in dd-MM-yyyy format — vary the phrasing naturally instead of reusing the same line every time, choosing something like:\n       \"📈 Your Leads Snapshot — [dd-MM-yyyy]\"\n       \"Leads Report Ready: [dd-MM-yyyy]\"\n       \"Here's Your Leads Update for [dd-MM-yyyy]\"\n       (pick one that fits the tone of the conversation; always keep it concise, professional, and always include the real current date)\n     - body: a well-structured, modern, visually attractive HTML email (NOT plain text) containing:\n       - A header banner with the title \"📊 Leads Report\" and the report date (dd-MM-yyyy) beneath it in smaller text\n       - A summary section with three clearly separated stat cards showing VERIFIED Total Leads, Genuine Leads, and Fake Leads counts from Rule 2 (use bold large numbers, short labels underneath, subtle background colors per card — e.g., neutral for Total, green-tinted for Genuine, red-tinted for Fake)\n       - A styled, zebra-striped table listing each lead with columns: Name, Email, Phone, Treatment Type, Date, Status\n       - Status shown as a small rounded \"pill\" badge — green background/text for \"Genuine Lead\", red background/text for \"Fake Lead\"\n       - Clean typography (a readable sans-serif font stack), generous padding, rounded corners on cards/table, subtle box-shadows, and a professional indigo/blue accent palette throughout\n       - Inline CSS only (no external stylesheets or <style> blocks in <head>, since many email clients strip them) — apply styles directly via style=\"\" attributes\n       - A footer note in smaller, muted text: \"This report was generated automatically by your Lead Management Assistant on [dd-MM-yyyy].\"\n   - After sending, confirm to the user: \"✅ The leads report has been sent to [email address].\"\n\n5. GENERAL GUIDELINES:\n   - Be concise and professional in chat replies.\n   - Never fabricate lead data — only use what \"Get Leads\" actually returns.\n   - If asked something unrelated to leads, politely redirect back to your role.\n   - If a tool call fails, tell the user honestly and ask them to try again — never pretend it succeeded.\n   - Never ask for more information than necessary.\n   - Never skip the Think + Calculator steps in Rule 2, even if the list looks small, the count seems obvious, or the user seems in a hurry."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [304, 0],
+      "id": "6e651ef4-7066-42f8-8f80-2e21695f054d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [16, 224],
+      "id": "93514770-84ca-4530-ac5d-a31c4aaf536b",
+      "name": "OpenAI Chat Model",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').item.json.webhookUrl }}",
+        "contextWindowLength": 25
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [192, 240],
+      "id": "2bd2acc0-7e19-4839-af33-0d73f685ce7b",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool for getting leads.",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Lead Gen",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [320, 240],
+      "id": "65a172bc-8aa0-46c9-99e9-bcb65cf3df97",
+      "name": "Get Leads",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to send the details if asked. Make sure to write the current date accurately in the subject and accurately count the No. of leads.",
+        "sendTo": "={{ $fromAI('To', '', 'string') }}",
+        "subject": "={{ $fromAI('Subject', '', 'string') }}",
+        "message": "={{ $fromAI('Message', '', 'string') }}",
+        "options": {
+          "appendAttribution": false,
+          "senderName": "YOUR_SENDER_NAME"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [448, 240],
+      "id": "280b3332-b72f-43de-b3b0-f0382b7ce538",
+      "name": "Send a message in Gmail",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [576, 240],
+      "id": "f1d6590f-47b1-4a4f-acaa-ba5cd458f797",
+      "name": "Calculator"
+    },
+    {
+      "parameters": {
+        "description": "Use this tool to think through and organize information step-by-step BEFORE giving a final answer or performing calculations, especially when counting or categorizing lead records."
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1.1,
+      "position": [704, 240],
+      "id": "c29abb4b-cb16-4cb2-9b2b-9a7aa0a9366a",
+      "name": "Think"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-generation-chatbot",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [0, 0],
+      "id": "55a84c62-b2b6-458d-94ce-0c6d985293f0",
+      "name": "Webhook",
+      "webhookId": "951a90d4-4e36-40f4-bcf2-61c4049d813f"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [784, 0],
+      "id": "bdacb367-3866-47a4-b9fd-51d80769d40f",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "connections": {
+    "AI Agent": {
+      "main": [[{"node": "Respond to Webhook", "type": "main", "index": 0}]]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [[{"node": "AI Agent", "type": "ai_languageModel", "index": 0}]]
+    },
+    "Simple Memory": {
+      "ai_memory": [[{"node": "AI Agent", "type": "ai_memory", "index": 0}]]
+    },
+    "Get Leads": {
+      "ai_tool": [[{"node": "AI Agent", "type": "ai_tool", "index": 0}]]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [[{"node": "AI Agent", "type": "ai_tool", "index": 0}]]
+    },
+    "Calculator": {
+      "ai_tool": [[{"node": "AI Agent", "type": "ai_tool", "index": 0}]]
+    },
+    "Think": {
+      "ai_tool": [[{"node": "AI Agent", "type": "ai_tool", "index": 0}]]
+    },
+    "Webhook": {
+      "main": [[{"node": "AI Agent", "type": "main", "index": 0}]]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}
